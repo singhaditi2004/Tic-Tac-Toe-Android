@@ -1,5 +1,7 @@
 package com.example.tictacktoe;
 
+import static com.example.tictacktoe.R.id.restartBtn;
+
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -8,14 +10,17 @@ import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
     GridView coursesGV;
+    AppCompatButton restartBt;
     int chance =0;
     public int[][] mat = {
             {-1, -1, -1},
@@ -43,7 +48,52 @@ public class MainActivity extends AppCompatActivity {
         TextView result = findViewById(R.id.resultText);
         CourseGVAdapter adapter = new CourseGVAdapter(this, courseModelArrayList);
         coursesGV.setAdapter(adapter);
+        restartBt=findViewById(R.id.restartBtn);
+        restartBt.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                chance = 0;
+                for (int[] row : mat) {
+                    Arrays.fill(row, -1);
+                }
+                for (CourseModel courseModel : courseModelArrayList) {
+                    courseModel.setImageResId(R.drawable.blank_image);
+                }
+                adapter.notifyDataSetChanged();
+                result.setVisibility(View.GONE);
+                coursesGV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        int row = position / 3;
+                        int col = position % 3;
+                        CourseModel clickedItem = courseModelArrayList.get(position);
 
+                        if (mat[row][col] == -1) {
+                            if (chance % 2 == 0) {
+                                clickedItem.setImageResId(R.drawable.x);
+                                mat[row][col] = 1;
+                            } else {
+                                clickedItem.setImageResId(R.drawable.zero);
+                                mat[row][col] = 0;
+                            }
+
+                            adapter.notifyDataSetChanged();
+
+                            if (checkWin()) {
+                                result.setText((chance % 2 == 0 ? "X" : "O") + " wins");
+                                result.setVisibility(View.VISIBLE);
+                                coursesGV.setOnItemClickListener(null); // Disable further clicks
+                            } else if (chance == 8) {
+                                result.setText("Draw");
+                                result.setVisibility(View.VISIBLE);
+                            }
+
+                            chance++;
+                        }
+                    }
+                });
+            }
+        });
         coursesGV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
